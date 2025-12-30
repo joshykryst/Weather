@@ -403,7 +403,7 @@ const findUserByToken = async (token) => {
 };
 
 // Register route
-app.post('/register', async (req, res) => {
+app.post('/api/register', async (req, res) => {
   try {
     const { username, password, firstName, middleInitial, lastName, gradeLevel, section, lrn, sex, phoneNumber } = req.body;
 
@@ -464,7 +464,7 @@ app.post('/register', async (req, res) => {
 });
 
 // Login route
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 

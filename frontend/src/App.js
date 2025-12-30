@@ -33,7 +33,7 @@ function App() {
 
   const handleLogin = async (username, password) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/login`, {
+      const response = await axios.post(`${API_BASE_URL}/api/login`, {
         username,
         password
       });
@@ -58,7 +58,7 @@ function App() {
 
   const handleRegister = async (username, password, studentData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/register`, {
+      const response = await axios.post(`${API_BASE_URL}/api/register`, {
         username,
         password,
         ...studentData
