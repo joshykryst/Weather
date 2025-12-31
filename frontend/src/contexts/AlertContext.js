@@ -120,7 +120,7 @@ export const AlertProvider = ({ children }) => {
     } catch (error) {
       console.error('Error fetching alert status:', error);
     }
-  }, [alertLevel]);
+  }, [alertLevel, playSiren]);
 
   useEffect(() => {
     fetchAlertStatus();
