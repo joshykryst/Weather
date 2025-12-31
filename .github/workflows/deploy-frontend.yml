@@ -33,7 +33,7 @@ jobs:
       - name: Build
         run: cd frontend && npm run build
         env:
-          REACT_APP_API_URL: https://jochocampo.tech
+          REACT_APP_API_URL: https://api.jochocampo.tech
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
