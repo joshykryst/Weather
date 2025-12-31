@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 
 const AlertContext = createContext();
@@ -88,7 +88,7 @@ export const AlertProvider = ({ children }) => {
     }
   };
 
-  const fetchAlertStatus = async () => {
+  const fetchAlertStatus = useCallback(async () => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
       const response = await axios.get(`${API_BASE_URL}/api/alert-status`);
@@ -120,7 +120,7 @@ export const AlertProvider = ({ children }) => {
     } catch (error) {
       console.error('Error fetching alert status:', error);
     }
-  };
+  }, [alertLevel]);
 
   useEffect(() => {
     fetchAlertStatus();
