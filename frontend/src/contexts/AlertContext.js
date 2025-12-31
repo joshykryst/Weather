@@ -126,7 +126,7 @@ export const AlertProvider = ({ children }) => {
     fetchAlertStatus();
     const interval = setInterval(fetchAlertStatus, 10000); // Poll every 10 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchAlertStatus]);
 
   const getThemeColors = () => {
     const themes = {
