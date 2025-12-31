@@ -23,7 +23,7 @@ export const AlertProvider = ({ children }) => {
   const [audioContext, setAudioContext] = useState(null);
 
   // Play siren sound for dangerous alert levels
-  const playSiren = (level) => {
+  const playSiren = useCallback((level) => {
     if (!audioEnabled) return;
     
     try {
@@ -86,7 +86,7 @@ export const AlertProvider = ({ children }) => {
     } catch (error) {
       console.error('Error playing siren:', error);
     }
-  };
+  }, [audioEnabled, audioContext]);
 
   const fetchAlertStatus = useCallback(async () => {
     try {
