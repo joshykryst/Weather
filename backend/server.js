@@ -93,36 +93,45 @@ function checkForRainInForecast(weatherData) {
   const main = weather.main.toLowerCase();
   
   // Get rainfall (mm in last 3 hours) and wind speed (m/s)
-  const rainfall = nextForecast.rain?.['3h'] || 0; // Rainfall in mm
+  const rainfall3h = nextForecast.rain?.['3h'] || 0; // Rainfall in mm over 3 hours
+  const rainfallPerHour = rainfall3h / 3; // Convert to mm/hr
   const windSpeed = nextForecast.wind.speed; // Wind speed in m/s
   const windSpeedKmh = windSpeed * 3.6; // Convert m/s to km/h
   
-  // Determine alert level based on PAGASA thresholds
+  // PAGASA Official Thresholds:
+  // Yellow: 7.5-15 mm/hr (heavy rain)
+  // Orange: 15-30 mm/hr (intense rain)  
+  // Red: >30 mm/hr (torrential rain)
+  
   let alertLevel = 'GREEN';
   let alertMessage = 'No immediate weather threat';
   
-  // RED: Heavy rain OR Wind > 60kph
-  if ((description.includes('heavy rain') || rainfall > 7.5) || windSpeedKmh > 60) {
+  // RED: Torrential rain (>30mm/hr) OR Severe winds (>60kph)
+  if (rainfallPerHour > 30 || windSpeedKmh > 60) {
     alertLevel = 'RED';
-    alertMessage = `SEVERE: Heavy rain (${rainfall.toFixed(1)}mm) or strong winds (${windSpeedKmh.toFixed(1)}km/h) detected`;
+    alertMessage = `SEVERE THREAT: ${rainfallPerHour > 30 ? `Torrential rain ${rainfallPerHour.toFixed(1)}mm/hr` : ''} ${windSpeedKmh > 60 ? `Strong winds ${windSpeedKmh.toFixed(1)}km/h` : ''}`;
   }
-  // ORANGE: Moderate-Heavy rain OR Wind > 40kph
-  else if ((description.includes('moderate') || (rainfall > 2.5 && rainfall <= 7.5)) || windSpeedKmh > 40) {
+  // ORANGE: Intense rain (15-30mm/hr) OR Moderate-strong winds (40-60kph)
+  else if (rainfallPerHour >= 15 || (windSpeedKmh >= 40 && windSpeedKmh <= 60)) {
     alertLevel = 'ORANGE';
-    alertMessage = `WARNING: Moderate rain (${rainfall.toFixed(1)}mm) or moderate winds (${windSpeedKmh.toFixed(1)}km/h) detected`;
+    alertMessage = `WARNING: ${rainfallPerHour >= 15 ? `Intense rain ${rainfallPerHour.toFixed(1)}mm/hr` : ''} ${windSpeedKmh >= 40 ? `Moderate winds ${windSpeedKmh.toFixed(1)}km/h` : ''}`;
   }
-  // YELLOW: Light-Moderate rain detected
-  else if (main.includes('rain') || rainfall > 0.1) {
+  // YELLOW: Heavy rain (7.5-15mm/hr) OR Light rain with description mention
+  else if (rainfallPerHour >= 7.5 || (rainfallPerHour >= 5 && (description.includes('rain') || main.includes('rain')))) {
     alertLevel = 'YELLOW';
-    alertMessage = `ADVISORY: Light rain (${rainfall.toFixed(1)}mm) detected in Angeles City`;
+    alertMessage = `ADVISORY: Heavy rain ${rainfallPerHour.toFixed(1)}mm/hr detected in Angeles City`;
   }
-  // GREEN: No rain detected
+  // GREEN: No significant rain or only light drizzle (<5mm/hr)
   else {
     alertLevel = 'GREEN';
-    alertMessage = `All clear: ${weather.description} (${windSpeedKmh.toFixed(1)}km/h wind)`;
+    if (rainfallPerHour > 0 && rainfallPerHour < 5) {
+      alertMessage = `Light rain ${rainfallPerHour.toFixed(1)}mm/hr - ${weather.description} (${windSpeedKmh.toFixed(1)}km/h wind)`;
+    } else {
+      alertMessage = `All clear: ${weather.description} (${windSpeedKmh.toFixed(1)}km/h wind)`;
+    }
   }
 
-  const hasRain = rainfall > 0 || main.includes('rain');
+  const hasRain = rainfall3h > 0 || main.includes('rain');
   
   const rainTime = new Date(nextForecast.dt * 1000);
   const formattedTime = rainTime.toLocaleString('en-US', {
@@ -144,7 +153,8 @@ function checkForRainInForecast(weatherData) {
     windSpeed: nextForecast.wind.speed,
     windSpeedKmh: windSpeedKmh.toFixed(1),
     humidity: nextForecast.main.humidity,
-    rainfall: rainfall.toFixed(1)
+    rainfall: rainfallPerHour.toFixed(1),
+    rainfall3h: rainfall3h.toFixed(1)
   };
 }
 
