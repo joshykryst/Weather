@@ -90,7 +90,7 @@ export const AlertProvider = ({ children }) => {
 
   const fetchAlertStatus = useCallback(async () => {
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://sample-cat.up.railway.app';
       const response = await axios.get(`${API_BASE_URL}/api/alert-status`);
       if (response.data.success) {
         const newLevel = response.data.currentAlertLevel;

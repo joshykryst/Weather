@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 const OPENWEATHER_API_KEY = 'a0f27a050036bd633ba6d968889baaab';
 const ANGELES_CITY_LAT = 15.15;
 const ANGELES_CITY_LON = 120.59;
-const API_URL = 'https://acsci-backend.loca.lt';
+const API_URL = process.env.REACT_APP_API_URL || 'https://sample-cat.up.railway.app';
 
 function WeatherDashboard({ user, token, onLogout }) {
   const [weatherData, setWeatherData] = useState(null);

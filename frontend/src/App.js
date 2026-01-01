@@ -11,7 +11,7 @@ import Sidebar from './components/Sidebar';
 import { AlertProvider } from './contexts/AlertContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://sample-cat.up.railway.app';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
