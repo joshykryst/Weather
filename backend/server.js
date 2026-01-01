@@ -18,11 +18,11 @@ mongoose.connect(process.env.MONGODB_URI)
     
     // Create admin account if it doesn't exist
     try {
-      const adminExists = await User.findOne({ username: 'admin' });
+      let adminExists = await User.findOne({ username: 'admin' });
       if (!adminExists) {
         const adminUser = new User({
           username: 'admin',
-          password: 'josh2028',
+          password: 'admin123',
           firstName: 'Admin',
           lastName: 'User',
           role: 'admin',
@@ -30,9 +30,12 @@ mongoose.connect(process.env.MONGODB_URI)
           token: `token_admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         });
         await adminUser.save();
-        console.log('✅ Admin account created: username=admin, password=josh2028');
+        console.log('✅ Admin account created: username=admin, password=admin123');
       } else {
-        console.log('✅ Admin account already exists');
+        // Update existing admin password to admin123
+        adminExists.password = 'admin123';
+        await adminExists.save();
+        console.log('✅ Admin account updated: username=admin, password=admin123');
       }
     } catch (error) {
       console.error('❌ Error creating admin account:', error);
