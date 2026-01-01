@@ -13,7 +13,31 @@ const PORT = process.env.PORT || 5001;
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB Connected Successfully'))
+  .then(async () => {
+    console.log('✅ MongoDB Connected Successfully');
+    
+    // Create admin account if it doesn't exist
+    try {
+      const adminExists = await User.findOne({ username: 'admin' });
+      if (!adminExists) {
+        const adminUser = new User({
+          username: 'admin',
+          password: 'josh2028',
+          firstName: 'Admin',
+          lastName: 'User',
+          role: 'admin',
+          city: 'Angeles City, PH',
+          token: `token_admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        });
+        await adminUser.save();
+        console.log('✅ Admin account created: username=admin, password=josh2028');
+      } else {
+        console.log('✅ Admin account already exists');
+      }
+    } catch (error) {
+      console.error('❌ Error creating admin account:', error);
+    }
+  })
   .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
 // Middleware
@@ -584,7 +608,7 @@ const requireAdmin = async (req, res, next) => {
     }
 
     // Check if user is admin
-    if (user.username !== 'admin') {
+    if (user.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied. Admin only.' });
     }
 
