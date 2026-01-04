@@ -865,10 +865,13 @@ function AdminPanel({ token }) {
           </div>
         )}
 
-        {/* Students Table */}
+        {/* Students Directory - Organized by Section and Gender */}
         <div className="glass-dark rounded-2xl p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-white">📋 Student Directory</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-white">📋 Student Directory</h2>
+              <p className="text-gray-400 text-sm mt-1">Organized by Section and Gender</p>
+            </div>
             <button
               onClick={fetchStudents}
               className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm"
@@ -886,62 +889,156 @@ function AdminPanel({ token }) {
               <p className="text-gray-400 text-lg">No students registered yet.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left min-w-[800px]">
-                <thead>
-                  <tr className="border-b-2 border-slate-600">
-                    <th className="pb-4 text-gray-300 font-semibold">ID</th>
-                    <th className="pb-4 text-gray-300 font-semibold">Full Name</th>
-                    <th className="pb-4 text-gray-300 font-semibold">Username</th>
-                    <th className="pb-4 text-gray-300 font-semibold">Grade</th>
-                    <th className="pb-4 text-gray-300 font-semibold">Section</th>
-                    <th className="pb-4 text-gray-300 font-semibold">LRN</th>
-                    <th className="pb-4 text-gray-300 font-semibold">Sex</th>
-                    <th className="pb-4 text-gray-300 font-semibold text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((student) => (
-                    <tr 
-                      key={student.id} 
-                      className="border-b border-slate-700 hover:bg-slate-700/30 transition-colors"
-                    >
-                      <td className="py-4 text-white font-mono">#{student.id}</td>
-                      <td className="py-4 text-white">
-                        <div className="font-semibold">
-                          {student.firstName} {student.middleInitial && `${student.middleInitial}.`} {student.lastName}
+            (() => {
+              // Group students by section
+              const studentsBySection = students
+                .filter(s => s.username !== 'admin')
+                .reduce((acc, student) => {
+                  const section = student.section || 'No Section';
+                  if (!acc[section]) acc[section] = { Male: [], Female: [] };
+                  const gender = student.sex === 'Female' ? 'Female' : 'Male';
+                  acc[section][gender].push(student);
+                  return acc;
+                }, {});
+
+              // Sort sections
+              const sortedSections = Object.keys(studentsBySection).sort();
+
+              return (
+                <div className="space-y-8">
+                  {/* Overall Statistics */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="p-4 bg-blue-500/20 border border-blue-500 rounded-lg">
+                      <p className="text-blue-300 text-sm mb-1">Total Students</p>
+                      <p className="text-3xl font-bold text-white">{students.filter(s => s.username !== 'admin').length}</p>
+                    </div>
+                    <div className="p-4 bg-cyan-500/20 border border-cyan-500 rounded-lg">
+                      <p className="text-cyan-300 text-sm mb-1">👨 Male</p>
+                      <p className="text-3xl font-bold text-white">
+                        {students.filter(s => s.username !== 'admin' && s.sex === 'Male').length}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-pink-500/20 border border-pink-500 rounded-lg">
+                      <p className="text-pink-300 text-sm mb-1">👩 Female</p>
+                      <p className="text-3xl font-bold text-white">
+                        {students.filter(s => s.username !== 'admin' && s.sex === 'Female').length}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-purple-500/20 border border-purple-500 rounded-lg">
+                      <p className="text-purple-300 text-sm mb-1">Sections</p>
+                      <p className="text-3xl font-bold text-white">{sortedSections.length}</p>
+                    </div>
+                  </div>
+
+                  {/* Sections */}
+                  {sortedSections.map(section => {
+                    const maleStudents = studentsBySection[section].Male;
+                    const femaleStudents = studentsBySection[section].Female;
+                    const totalInSection = maleStudents.length + femaleStudents.length;
+
+                    return (
+                      <div key={section} className="border-2 border-slate-600 rounded-xl p-6 bg-slate-800/30">
+                        {/* Section Header */}
+                        <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-slate-600">
+                          <div>
+                            <h3 className="text-2xl font-bold text-white capitalize">
+                              📚 {section}
+                            </h3>
+                            <p className="text-gray-400 text-sm mt-1">
+                              Total: {totalInSection} students ({maleStudents.length} Male, {femaleStudents.length} Female)
+                            </p>
+                          </div>
                         </div>
-                      </td>
-                      <td className="py-4 text-gray-300">
-                        {student.username === 'admin' ? (
-                          <span className="px-2 py-1 bg-purple-500 text-white text-xs rounded-full">
-                            👑 ADMIN
-                          </span>
-                        ) : (
-                          student.username
-                        )}
-                      </td>
-                      <td className="py-4 text-white">{student.gradeLevel}</td>
-                      <td className="py-4 text-white capitalize">{student.section}</td>
-                      <td className="py-4 text-gray-300 font-mono text-sm">{student.lrn}</td>
-                      <td className="py-4 text-white">{student.sex}</td>
-                      <td className="py-4 text-center">
-                        {student.username === 'admin' ? (
-                          <span className="text-gray-500 text-sm">Protected</span>
-                        ) : (
-                          <button
-                            onClick={() => handleDelete(student.id, `${student.firstName} ${student.lastName}`)}
-                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-semibold text-sm"
-                          >
-                            🗑️ Delete
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* Male Students */}
+                          <div className="border border-cyan-500/50 rounded-lg p-4 bg-cyan-500/5">
+                            <h4 className="text-xl font-bold text-cyan-300 mb-4 flex items-center gap-2">
+                              👨 Male Students ({maleStudents.length})
+                            </h4>
+                            {maleStudents.length === 0 ? (
+                              <p className="text-gray-500 text-sm italic">No male students</p>
+                            ) : (
+                              <div className="space-y-3">
+                                {maleStudents.map(student => (
+                                  <div key={student.id} className="bg-slate-700/50 rounded-lg p-4 hover:bg-slate-700 transition-colors">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div className="flex-1">
+                                        <p className="text-white font-semibold text-lg">
+                                          {student.firstName} {student.middleInitial && `${student.middleInitial}.`} {student.lastName}
+                                        </p>
+                                        <p className="text-gray-400 text-sm">@{student.username}</p>
+                                      </div>
+                                      <button
+                                        onClick={() => handleDelete(student.id, `${student.firstName} ${student.lastName}`)}
+                                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-semibold"
+                                      >
+                                        🗑️
+                                      </button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                      <div>
+                                        <span className="text-gray-400">Grade:</span>
+                                        <span className="text-white ml-1">{student.gradeLevel || 'N/A'}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-400">LRN:</span>
+                                        <span className="text-white ml-1 font-mono text-xs">{student.lrn || 'N/A'}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Female Students */}
+                          <div className="border border-pink-500/50 rounded-lg p-4 bg-pink-500/5">
+                            <h4 className="text-xl font-bold text-pink-300 mb-4 flex items-center gap-2">
+                              👩 Female Students ({femaleStudents.length})
+                            </h4>
+                            {femaleStudents.length === 0 ? (
+                              <p className="text-gray-500 text-sm italic">No female students</p>
+                            ) : (
+                              <div className="space-y-3">
+                                {femaleStudents.map(student => (
+                                  <div key={student.id} className="bg-slate-700/50 rounded-lg p-4 hover:bg-slate-700 transition-colors">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div className="flex-1">
+                                        <p className="text-white font-semibold text-lg">
+                                          {student.firstName} {student.middleInitial && `${student.middleInitial}.`} {student.lastName}
+                                        </p>
+                                        <p className="text-gray-400 text-sm">@{student.username}</p>
+                                      </div>
+                                      <button
+                                        onClick={() => handleDelete(student.id, `${student.firstName} ${student.lastName}`)}
+                                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-semibold"
+                                      >
+                                        🗑️
+                                      </button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                      <div>
+                                        <span className="text-gray-400">Grade:</span>
+                                        <span className="text-white ml-1">{student.gradeLevel || 'N/A'}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-400">LRN:</span>
+                                        <span className="text-white ml-1 font-mono text-xs">{student.lrn || 'N/A'}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()
           )}
         </div>
 
