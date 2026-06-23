@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import webpush from 'web-push';
 import cron from 'node-cron';
 import User from './models/User.js';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -1303,6 +1305,15 @@ app.get('/health', async (req, res) => {
     });
   }
 });
+
+// Serve frontend static files if present (single-app deployment)
+const buildPath = path.join(process.cwd(), 'build');
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
