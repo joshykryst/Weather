@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import MapComponent from './MapComponent';
-import RainAlerts from './RainAlerts';
 import { useAlert } from '../contexts/AlertContext';
 import { Link } from 'react-router-dom';
 
@@ -16,16 +14,11 @@ function WeatherDashboard({ user, token, onLogout }) {
   const [notificationPermission, setNotificationPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'default'
   );
-  const [rainAlerts, setRainAlerts] = useState([]);
   const [isPushSubscribed, setIsPushSubscribed] = useState(false);
-  const [serviceWorkerReady, setServiceWorkerReady] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [isStandalone, setIsStandalone] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
   
   // Get alert context
-  const { alertLevel, getThemeColors, fetchAlertStatus, playSiren } = useAlert();
-  const theme = getThemeColors();
+  const { alertLevel } = useAlert();
 
   // Calculate Heat Index from temperature and humidity
   const calculateHeatIndex = (tempC, humidity) => {
@@ -65,60 +58,6 @@ function WeatherDashboard({ user, token, onLogout }) {
     if (heatIndex >= 26) return 'text-yellow-500'; // Hot
     if (heatIndex >= 21) return 'text-blue-400'; // Warm
     return 'text-cyan-400'; // Cool
-  };
-
-  // Test siren function
-  const testSiren = () => {
-    if (playSiren) {
-      playSiren(alertLevel);
-    }
-    
-    // Also test vibration directly
-    if ('vibrate' in navigator) {
-      const patterns = {
-        YELLOW: [200, 100, 200],
-        ORANGE: [300, 100, 300, 100, 300],
-        RED: [500, 200, 500, 200, 500, 200, 500, 200, 500]
-      };
-      navigator.vibrate(patterns[alertLevel] || [200, 100, 200]);
-      console.log('📳 Vibration triggered for ' + alertLevel);
-    } else {
-      console.warn('⚠️ Vibration API not supported on this device');
-      alert('Vibration not supported on this device/browser');
-    }
-  };
-
-  // Force refresh alert status
-  const forceRefresh = async () => {
-    if (fetchAlertStatus) {
-      await fetchAlertStatus();
-      alert('Alert status refreshed!');
-    }
-  };
-
-  // Reload service worker (for updates)
-  const reloadServiceWorker = async () => {
-    if (!navigator.serviceWorker) {
-      alert('Service workers not supported on this browser');
-      return;
-    }
-
-    if (!window.confirm('This will reload the page to update the service worker. Continue?')) {
-      return;
-    }
-
-    try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (let registration of registrations) {
-        await registration.unregister();
-      }
-      
-      // Force reload immediately
-      window.location.reload(true);
-    } catch (error) {
-      console.error('Error reloading service worker:', error);
-      alert('Failed to reload service worker: ' + error.message);
-    }
   };
 
   // Fetch weather data for Angeles City
@@ -191,8 +130,6 @@ function WeatherDashboard({ user, token, onLogout }) {
     
     console.log(`🌧️ [Rain Monitor] Found ${rainTimes.length} rain forecasts out of 40 data points`);
     
-    setRainAlerts(rainTimes);
-    
     // Send notification immediately if rain found anywhere in forecast
     if (rainFound && notificationPermission === 'granted') {
       console.log('📢 [Notification] Sending rain alert notification...');
@@ -216,20 +153,10 @@ function WeatherDashboard({ user, token, onLogout }) {
 
   // Initialize service worker and check iOS compatibility
   useEffect(() => {
-    // Check if running on iOS
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    setIsIOS(isIOSDevice);
-    
-    // Check if running in standalone mode (installed as PWA)
-    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches ||
-                               window.navigator.standalone === true;
-    setIsStandalone(isInStandaloneMode);
-    
     if ('serviceWorker' in navigator && 'PushManager' in window) {
       navigator.serviceWorker.register('/service-worker.js')
         .then((registration) => {
           console.log('✅ Service Worker registered:', registration);
-          setServiceWorkerReady(true);
           
           // Check if already subscribed
           registration.pushManager.getSubscription()
